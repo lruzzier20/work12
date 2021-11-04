@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+#include <errno.h>
 
 void printdir(DIR* d, struct dirent* entry, int size){
   struct stat *stt;
@@ -17,12 +21,23 @@ void printdir(DIR* d, struct dirent* entry, int size){
   }else{printf("Total Directory Size = %d Bytes\n",size);}
 }
 
-int main(){
+int main(int argc, char* argv[]){
   DIR* a;
-  a=opendir(".");
+  char buffer[100];
+  int hold;
+  hold=open("/dev/stdin", O_RDONLY);
+  if(argc>1){a=opendir(argv[1]);}else{printf("which directory would you like to scan? (use ctrl+d to submit)\n");
+                                      read(hold,buffer,sizeof(buffer));
+                                      printf("\n");
+                                      a=opendir(buffer);
+                                      if(errno){printf("%s\n",strerror(errno));}
+                                    }
+  if(!errno){
   struct dirent *current;
   current=readdir(a);
   printdir(a,current,0);
+  close(hold);
   closedir(a);
-  return 0;
+  return 0;}
+  return 1;
 }
